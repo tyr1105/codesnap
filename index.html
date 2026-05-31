@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeSnap — 代码截图美化工具</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Fira+Code:wght@400;500;700&family=Source+Code+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-swift.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-kotlin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-ruby.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-dart.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; overflow-x: hidden; }
+
+  .sidebar { width: 320px; min-width: 320px; height: 100vh; overflow-y: auto; background: #1e293b; border-right: 1px solid #334155; }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 10px; }
+
+  .gradient-swatch {
+    width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+    border: 2px solid transparent; transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .gradient-swatch:hover { transform: scale(1.15); }
+  .gradient-swatch.active { border-color: #60a5fa; box-shadow: 0 0 0 2px rgba(96,165,250,0.4); }
+
+  .theme-btn {
+    padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    border: 1px solid #475569; background: #1e293b; color: #cbd5e1;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .theme-btn:hover { background: #334155; }
+  .theme-btn.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+
+  .font-btn {
+    padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    border: 1px solid #475569; background: #1e293b; color: #cbd5e1;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .font-btn:hover { background: #334155; }
+  .font-btn.active { background: #8b5cf6; border-color: #8b5cf6; color: white; }
+
+  select, input[type="text"], input[type="color"] {
+    background: #0f172a; border: 1px solid #475569; color: #e2e8f0;
+    border-radius: 6px; padding: 8px 12px; font-size: 13px; width: 100%;
+    outline: none; transition: border-color 0.2s;
+  }
+  select:focus, input[type="text"]:focus { border-color: #3b82f6; }
+
+  input[type="range"] {
+    -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px;
+    background: #334155; outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: #3b82f6; cursor: pointer; border: 2px solid #1e293b;
+  }
+
+  .export-btn {
+    width: 100%; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700;
+    cursor: pointer; border: none; color: white;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .export-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(59,130,246,0.4); }
+  .export-btn:active { transform: translateY(0); }
+  .export-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Preview area */
+  .preview-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 40px; overflow: auto; min-height: 100vh;
+  }
+
+  /* Code window */
+  .code-window {
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+  }
+  .window-chrome {
+    display: flex; align-items: center; padding: 12px 16px; gap: 8px;
+    background: rgba(0,0,0,0.15);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-close { background: #ff5f57; }
+  .dot-minimize { background: #febc2e; }
+  .dot-maximize { background: #28c840; }
+  .window-title { flex: 1; text-align: center; font-size: 13px; color: rgba(255,255,255,0.6); font-family: -apple-system, sans-serif; }
+
+  .code-area {
+    overflow: auto; max-height: 600px;
+  }
+  .code-area::-webkit-scrollbar { width: 8px; height: 8px; }
+  .code-area::-webkit-scrollbar-track { background: transparent; }
+  .code-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+  .code-area pre { margin: 0 !important; padding: 0 !important; background: transparent !important; overflow: visible !important; }
+  .code-area code { font-family: 'JetBrains Mono', monospace !important; font-size: 14px !important; line-height: 1.7 !important; tab-size: 2 !important; background: transparent !important; }
+
+  /* Theme overrides */
+  .theme-one-dark .code-area { background: #282c34; color: #abb2bf; }
+  .theme-one-dark .code-area .token.comment { color: #5c6370; font-style: italic; }
+  .theme-one-dark .code-area .token.string { color: #98c379; }
+  .theme-one-dark .code-area .token.number { color: #d19a66; }
+  .theme-one-dark .code-area .token.keyword { color: #c678dd; }
+  .theme-one-dark .code-area .token.function { color: #61afef; }
+  .theme-one-dark .code-area .token.operator { color: #56b6c2; }
+  .theme-one-dark .code-area .token.class-name { color: #e5c07b; }
+  .theme-one-dark .code-area .token.boolean { color: #d19a66; }
+  .theme-one-dark .code-area .token.builtin { color: #e5c07b; }
+  .theme-one-dark .code-area .token.property { color: #e06c75; }
+  .theme-one-dark .code-area .token.tag { color: #e06c75; }
+  .theme-one-dark .code-area .token.attr-name { color: #d19a66; }
+  .theme-one-dark .code-area .token.attr-value { color: #98c379; }
+  .theme-one-dark .code-area .token.punctuation { color: #abb2bf; }
+  .theme-one-dark .code-area .token.selector { color: #e06c75; }
+
+  .theme-dracula .code-area { background: #282a36; color: #f8f8f2; }
+  .theme-dracula .code-area .token.comment { color: #6272a4; }
+  .theme-dracula .code-area .token.string { color: #f1fa8c; }
+  .theme-dracula .code-area .token.number { color: #bd93f9; }
+  .theme-dracula .code-area .token.keyword { color: #ff79c6; }
+  .theme-dracula .code-area .token.function { color: #50fa7b; }
+  .theme-dracula .code-area .token.operator { color: #ff79c6; }
+  .theme-dracula .code-area .token.class-name { color: #8be9fd; }
+  .theme-dracula .code-area .token.boolean { color: #bd93f9; }
+  .theme-dracula .code-area .token.builtin { color: #8be9fd; }
+  .theme-dracula .code-area .token.property { color: #66d9ef; }
+  .theme-dracula .code-area .token.tag { color: #ff79c6; }
+  .theme-dracula .code-area .token.attr-name { color: #50fa7b; }
+  .theme-dracula .code-area .token.attr-value { color: #f1fa8c; }
+  .theme-dracula .code-area .token.punctuation { color: #f8f8f2; }
+
+  .theme-solarized .code-area { background: #002b36; color: #839496; }
+  .theme-solarized .code-area .token.comment { color: #586e75; font-style: italic; }
+  .theme-solarized .code-area .token.string { color: #2aa198; }
+  .theme-solarized .code-area .token.number { color: #d33682; }
+  .theme-solarized .code-area .token.keyword { color: #859900; }
+  .theme-solarized .code-area .token.function { color: #268bd2; }
+  .theme-solarized .code-area .token.operator { color: #859900; }
+  .theme-solarized .code-area .token.class-name { color: #b58900; }
+  .theme-solarized .code-area .token.boolean { color: #cb4b16; }
+  .theme-solarized .code-area .token.builtin { color: #b58900; }
+  .theme-solarized .code-area .token.property { color: #268bd2; }
+
+  .theme-monokai .code-area { background: #272822; color: #f8f8f2; }
+  .theme-monokai .code-area .token.comment { color: #75715e; }
+  .theme-monokai .code-area .token.string { color: #e6db74; }
+  .theme-monokai .code-area .token.number { color: #ae81ff; }
+  .theme-monokai .code-area .token.keyword { color: #f92672; }
+  .theme-monokai .code-area .token.function { color: #a6e22e; }
+  .theme-monokai .code-area .token.operator { color: #f92672; }
+  .theme-monokai .code-area .token.class-name { color: #66d9ef; }
+  .theme-monokai .code-area .token.boolean { color: #ae81ff; }
+  .theme-monokai .code-area .token.builtin { color: #66d9ef; }
+  .theme-monokai .code-area .token.property { color: #a6e22e; }
+
+  .theme-github-light .code-area { background: #ffffff; color: #24292e; }
+  .theme-github-light .code-area .token.comment { color: #6a737d; }
+  .theme-github-light .code-area .token.string { color: #032f62; }
+  .theme-github-light .code-area .token.number { color: #005cc5; }
+  .theme-github-light .code-area .token.keyword { color: #d73a49; }
+  .theme-github-light .code-area .token.function { color: #6f42c1; }
+  .theme-github-light .code-area .token.operator { color: #d73a49; }
+  .theme-github-light .code-area .token.class-name { color: #6f42c1; }
+  .theme-github-light .code-area .token.boolean { color: #005cc5; }
+  .theme-github-light .code-area .token.builtin { color: #005cc5; }
+  .theme-github-light .code-area .token.property { color: #005cc5; }
+  .theme-github-light .window-chrome { background: rgba(0,0,0,0.05); }
+  .theme-github-light .window-title { color: rgba(0,0,0,0.5); }
+
+  .theme-night-owl .code-area { background: #011627; color: #d6deeb; }
+  .theme-night-owl .code-area .token.comment { color: #637777; font-style: italic; }
+  .theme-night-owl .code-area .token.string { color: #ecc48d; }
+  .theme-night-owl .code-area .token.number { color: #f78c6c; }
+  .theme-night-owl .code-area .token.keyword { color: #c792ea; }
+  .theme-night-owl .code-area .token.function { color: #82aaff; }
+  .theme-night-owl .code-area .token.operator { color: #c792ea; }
+  .theme-night-owl .code-area .token.class-name { color: #ffcb8b; }
+  .theme-night-owl .code-area .token.boolean { color: #f78c6c; }
+  .theme-night-owl .code-area .token.builtin { color: #addb67; }
+  .theme-night-owl .code-area .token.property { color: #80cbc4; }
+
+  /* Line numbers */
+  .line-numbers-row {
+    display: flex;
+  }
+  .line-numbers-col {
+    padding-right: 16px;
+    text-align: right;
+    user-select: none;
+    opacity: 0.35;
+    font-size: 14px;
+    line-height: 1.7;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    margin-right: 16px;
+    padding-top: 0;
+  }
+  .theme-github-light .line-numbers-col {
+    border-right-color: rgba(0,0,0,0.1);
+  }
+
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: #22c55e; color: white; padding: 12px 24px; border-radius: 8px;
+    font-weight: 600; font-size: 14px; z-index: 9999; opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div style="display:flex; height:100vh;">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div style="padding: 24px;">
+      <!-- Logo -->
+      <div style="margin-bottom: 28px; display:flex; align-items:center; gap:12px;">
+        <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:20px;">📷</div>
+        <div>
+          <div style="font-size:18px;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">CodeSnap</div>
+          <div style="font-size:11px;color:#64748b;">代码截图美化工具</div>
+        </div>
+      </div>
+
+      <!-- Language -->
+      <div style="margin-bottom: 20px;">
+        <div class="section-title">编程语言</div>
+        <select id="languageSelect">
+          <option value="javascript">JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="python">Python</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+          <option value="go">Go</option>
+          <option value="rust">Rust</option>
+          <option value="java">Java</option>
+          <option value="c">C</option>
+          <option value="cpp">C++</option>
+          <option value="bash">Shell / Bash</option>
+          <option value="json">JSON</option>
+          <option value="sql">SQL</option>
+          <option value="yaml">YAML</option>
+          <option value="swift">Swift</option>
+          <option value="kotlin">Kotlin</option>
+          <option value="ruby">Ruby</option>
+          <option value="php">PHP</option>
+          <option value="dart">Dart</option>
+          <option value="markup">纯文本 / Markup</option>
+        </select>
+      </div>
+
+      <!-- Theme -->
+      <div style="margin-bottom: 20px;">
+        <div class="section-title">编辑器主题</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button class="theme-btn active" data-theme="one-dark">One Dark</button>
+          <button class="theme-btn" data-theme="dracula">Dracula</button>
+          <button class="theme-btn" data-theme="solarized">Solarized</button>
+          <button class="theme-btn" data-theme="monokai">Monokai</button>
+          <button class="theme-btn" data-theme="github-light">GitHub Light</button>
+          <button class="theme-btn" data-theme="night-owl">Night Owl</button>
+        </div>
+      </div>
+
+      <!-- Font -->
+      <div style="margin-bottom: 20px;">
+        <div class="section-title">字体</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button class="font-btn active" data-font="JetBrains Mono">JetBrains Mono</button>
+          <button class="font-btn" data-font="Fira Code">Fira Code</button>
+          <button class="font-btn" data-font="Source Code Pro">Source Code Pro</button>
+        </div>
+      </div>
+
+      <!-- Font Size -->
+      <div style="margin-bottom: 20px;">
+        <div class="section-title">字体大小: <span id="fontSizeValue">14</span>px</div>
+        <input type="range" id="fontSizeRange" min="10" max="24" value="14">
+      </div>
+
+      <!-- Background -->
+      <div style="margin-bottom: 20px;">
+        <div class="section-title">背景渐变</div>
+        <div id="gradientSwatches" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="font-size:12px;color:#94a3b8;white-space:nowrap;">自定义颜色</label>
+          <input type="color" id="customBgColor" value="#3b82f6" style="width:40px;height:32px;padding:2px;cursor:pointer;border-radius:6px;">
+          <button onclick="setCustomBg()" style="font-size:12px;padding:6px 12px;border-radius:6px;background:#334155;border:1px solid #475569;color:#cbd5e1;cursor:pointer;white-space:nowrap;">应用纯色</button>
+        </div>
+      </div>
+
+      <!-- Padding -->
+      <div style="margin-bottom: 20px;">
+        <div class="section-title">内边距: <span id="paddingValue">32</span>px</div>
+        <input type="range" id="paddingRange" min="16" max="64" value="32" step="4">
+      </div>
+
+      <!-- Window Title -->
+      <div style="margin-bottom: 20px;">
+        <div class="section-title">窗口标题</div>
+        <input type="text" id="windowTitle" value="app.js" placeholder="文件名...">
+      </div>
+
+      <!-- Line Numbers -->
+      <div style="margin-bottom: 24px; display:flex; align-items:center; gap:10px;">
+        <label style="font-size:13px;color:#cbd5e1;cursor:pointer;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="showLineNumbers" checked style="accent-color:#3b82f6;width:16px;height:16px;">
+          显示行号
+        </label>
+      </div>
+
+      <!-- Shadow -->
+      <div style="margin-bottom: 24px; display:flex; align-items:center; gap:10px;">
+        <label style="font-size:13px;color:#cbd5e1;cursor:pointer;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="showShadow" checked style="accent-color:#3b82f6;width:16px;height:16px;">
+          窗口阴影
+        </label>
+      </div>
+
+      <!-- Export -->
+      <button class="export-btn" id="exportBtn" onclick="exportImage()">
+        📸 导出高清 PNG（2x）
+      </button>
+
+      <div style="margin-top:12px;text-align:center;font-size:11px;color:#475569;">
+        提示：直接粘贴代码即可预览
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-area" id="previewArea">
+    <div id="codeWindow" class="code-window theme-one-dark" style="padding:32px;background:linear-gradient(135deg,#667eea,#764ba2);">
+      <div id="innerWindow" style="border-radius:12px;overflow:hidden;">
+        <div class="window-chrome">
+          <div class="dot dot-close"></div>
+          <div class="dot dot-minimize"></div>
+          <div class="dot dot-maximize"></div>
+          <div class="window-title" id="windowTitleDisplay">app.js</div>
+          <div style="width:60px;"></div>
+        </div>
+        <div class="code-area" id="codeArea">
+          <div class="line-numbers-row" id="codeContent">
+            <div class="line-numbers-col" id="lineNumbers"></div>
+            <div id="codeHighlight" style="flex:1;overflow-x:auto;">
+              <pre><code class="language-javascript"></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Hidden textarea -->
+<textarea id="codeInput" style="position:absolute;left:-9999px;"></textarea>
+
+<script>
+// Default code samples
+const defaultCode = `function fibonacci(n) {
+  if (n <= 1) return n;
+  
+  let a = 0, b = 1;
+  for (let i = 2; i <= n; i++) {
+    [a, b] = [b, a + b];
+  }
+  
+  return b;
+}
+
+// 生成前 10 个斐波那契数
+const result = Array.from({ length: 10 }, (_, i) => fibonacci(i));
+console.log("斐波那契数列:", result);`;
+
+// Gradient presets
+const gradients = [
+  { name: '极光紫', value: 'linear-gradient(135deg, #667eea, #764ba2)' },
+  { name: '日落橙', value: 'linear-gradient(135deg, #f093fb, #f5576c)' },
+  { name: '海洋蓝', value: 'linear-gradient(135deg, #4facfe, #00f2fe)' },
+  { name: '翡翠绿', value: 'linear-gradient(135deg, #43e97b, #38f9d7)' },
+  { name: '暮色粉', value: 'linear-gradient(135deg, #a18cd1, #fbc2eb)' },
+  { name: '烈焰红', value: 'linear-gradient(135deg, #f5576c, #ff6a00)' },
+  { name: '深邃夜', value: 'linear-gradient(135deg, #0c3483, #a2b6df)' },
+  { name: '柠檬黄', value: 'linear-gradient(135deg, #f6d365, #fda085)' },
+  { name: '星空紫', value: 'linear-gradient(135deg, #a855f7, #6366f1)' },
+  { name: '薄荷清', value: 'linear-gradient(135deg, #89f7fe, #66a6ff)' },
+  { name: '玫瑰金', value: 'linear-gradient(135deg, #f5af19, #f12711)' },
+  { name: '极光蓝', value: 'linear-gradient(135deg, #00c6fb, #005bea)' },
+];
+
+let currentGradient = 0;
+let currentTheme = 'one-dark';
+let currentFont = 'JetBrains Mono';
+let currentFontSize = 14;
+let currentPadding = 32;
+let currentLanguage = 'javascript';
+let currentCode = defaultCode;
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  initGradientSwatches();
+  initThemeButtons();
+  initFontButtons();
+  initSliders();
+  initInputs();
+  updateCode();
+});
+
+function initGradientSwatches() {
+  const container = document.getElementById('gradientSwatches');
+  gradients.forEach((g, i) => {
+    const swatch = document.createElement('div');
+    swatch.className = 'gradient-swatch' + (i === 0 ? ' active' : '');
+    swatch.style.background = g.value;
+    swatch.title = g.name;
+    swatch.onclick = () => {
+      document.querySelectorAll('.gradient-swatch').forEach(s => s.classList.remove('active'));
+      swatch.classList.add('active');
+      currentGradient = i;
+      document.getElementById('codeWindow').style.background = g.value;
+    };
+    container.appendChild(swatch);
+  });
+}
+
+function initThemeButtons() {
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTheme = btn.dataset.theme;
+      const codeWindow = document.getElementById('codeWindow');
+      codeWindow.className = 'code-window theme-' + currentTheme;
+      updateCode();
+    };
+  });
+}
+
+function initFontButtons() {
+  document.querySelectorAll('.font-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFont = btn.dataset.font;
+      updateCode();
+    };
+  });
+}
+
+function initSliders() {
+  document.getElementById('fontSizeRange').oninput = (e) => {
+    currentFontSize = parseInt(e.target.value);
+    document.getElementById('fontSizeValue').textContent = currentFontSize;
+    updateCode();
+  };
+  document.getElementById('paddingRange').oninput = (e) => {
+    currentPadding = parseInt(e.target.value);
+    document.getElementById('paddingValue').textContent = currentPadding;
+    document.getElementById('codeWindow').style.padding = currentPadding + 'px';
+  };
+}
+
+function initInputs() {
+  document.getElementById('languageSelect').onchange = (e) => {
+    currentLanguage = e.target.value;
+    updateCode();
+  };
+  document.getElementById('windowTitle').oninput = (e) => {
+    document.getElementById('windowTitleDisplay').textContent = e.target.value || 'untitled';
+  };
+  document.getElementById('showLineNumbers').onchange = () => updateCode();
+  document.getElementById('showShadow').onchange = (e) => {
+    const cw = document.getElementById('codeWindow');
+    if (e.target.checked) {
+      cw.style.boxShadow = '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)';
+    } else {
+      cw.style.boxShadow = 'none';
+    }
+  };
+
+  // Listen for paste anywhere
+  document.addEventListener('paste', (e) => {
+    const active = document.activeElement;
+    if (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT') return;
+    const text = e.clipboardData.getData('text');
+    if (text) {
+      currentCode = text;
+      updateCode();
+      showToast('✅ 代码已粘贴');
+    }
+  });
+
+  // Also make the code area clickable to focus for paste
+  document.getElementById('codeArea').addEventListener('click', () => {
+    document.getElementById('codeInput').focus();
+  });
+}
+
+function setCustomBg() {
+  const color = document.getElementById('customBgColor').value;
+  document.querySelectorAll('.gradient-swatch').forEach(s => s.classList.remove('active'));
+  document.getElementById('codeWindow').style.background = color;
+}
+
+function updateCode() {
+  const code = currentCode;
+  const lang = currentLanguage;
+  const showLines = document.getElementById('showLineNumbers').checked;
+
+  // Highlight
+  const grammar = Prism.languages[lang];
+  let highlighted;
+  if (grammar) {
+    highlighted = Prism.highlight(code, grammar, lang);
+  } else {
+    highlighted = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  const codeEl = document.querySelector('#codeHighlight code');
+  codeEl.className = 'language-' + lang;
+  codeEl.style.fontFamily = "'" + currentFont + "', monospace";
+  codeEl.style.fontSize = currentFontSize + 'px';
+  codeEl.style.lineHeight = '1.7';
+  codeEl.innerHTML = highlighted;
+
+  // Line numbers
+  const lines = code.split('\n');
+  const lineNumEl = document.getElementById('lineNumbers');
+  if (showLines) {
+    lineNumEl.style.display = 'block';
+    lineNumEl.style.fontFamily = "'" + currentFont + "', monospace";
+    lineNumEl.style.fontSize = currentFontSize + 'px';
+    lineNumEl.innerHTML = lines.map((_, i) => `<div>${i + 1}</div>`).join('');
+  } else {
+    lineNumEl.style.display = 'none';
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+async function exportImage() {
+  const btn = document.getElementById('exportBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 正在生成...';
+
+  try {
+    const el = document.getElementById('codeWindow');
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null,
+      logging: false,
+    });
+
+    const link = document.createElement('a');
+    link.download = 'codesnap-' + Date.now() + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('🎉 截图已导出！');
+  } catch (err) {
+    console.error(err);
+    showToast('❌ 导出失败，请重试');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '📸 导出高清 PNG（2x）';
+}
+</script>
+</body>
+</html>
